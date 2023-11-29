@@ -41,10 +41,11 @@ class Graph:
                     self.vertex = [-1]
                     print('В графе некорректно заданы номера!\nПроверьте уникальность номеров.')
                     return
-            if len(test) != len(tmp):
-                self.vertex = [-1]
-                print('В данном случае от каждой вершины должна выходить одна дуга.')
-                return
+            # Рассматривается случай, когда из v1 в v2 выходит больше 1 дуги
+            # if len(test) != len(tmp):
+            #     self.vertex = [-1]
+            #     print('В данном случае от каждой вершины должна выходить одна дуга.')
+            #     return
             self.adjc[v] = tmp
         for v in unic_vs:
             if v not in self.adjc:
@@ -73,20 +74,20 @@ class Graph:
 
 
     def get_parents(self):
-        def dfs(used, v, cur_v):
+        def dfs(used, v):
             used[v] = True
             for u in self.adjc[v]:
                 if not used[u]:
                     self.prnts[u] = v
                     self.children[v] = u
-                    dfs(used, u, cur_v)
+                    dfs(used, u)
         self.parents_init()
         self.children_init()
         used = {}
         for v in self.vertex:        
             for el in self.vertex:
                 used[el] = False
-            dfs(used, v, v)
+            dfs(used, v)
 
 
 class FunctionCreation:
