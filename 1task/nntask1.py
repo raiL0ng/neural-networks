@@ -4,21 +4,39 @@ from json import dump
 class Graph:
     
     def __init__(self) -> None:
+        self.vertex = set()
         self.adjc = {}
-        self.vertex = []
+        self.check = {}
 
 
     def graph_construction(self, data : list) -> None:
-        vs = set()
         for el in data:
-            vs.add(el[0])
-            vs.add(el[1])
+            self.vertex.add(el[0])
+            self.vertex.add(el[1])
+            if el[1] not in self.check:
+                self.check[el[1]] = []
+            self.check[el[1]].append((el[0], int(el[2])))
             if el[0] not in self.adjc:
                 self.adjc[el[0]] = []
-            self.adjc[el[0]].append((el[1], el[2]))
-        vs = list(vs)
-        vs.sort()
-        self.vertex = vs
+            self.adjc[el[0]].append((el[1], int(el[2])))
+        self.vertex = list(self.vertex)
+        self.vertex.sort()
+        for _, vs in self.check.items():
+            n = len(vs)
+            tmp = [''] * n
+            for el, k in vs:
+                t = (k - 1) % n
+                if tmp[t] == el:
+                    tmp[t + 1] = el
+                else:
+                    tmp[t] = el
+            test = set()
+            for el in tmp:
+                test.add(el)
+                if el == '':
+                    self.vertex = [-1]
+                    print('В графе некорректно заданы номера!\nПроверьте уникальность номеров.')
+                    return
 
 
 class GraphCreation:
@@ -90,13 +108,12 @@ class GraphCreation:
 
     def get_graph(self) -> None:
         self.g.graph_construction(self.data)
-        print(self.g.vertex, self.g.adjc)
         arc = []
-        for el in self.g.vertex:
+        for el in self.g.adjc.keys():
             for tpl in self.g.adjc[el]:
                 arc.append({ "from" : el
-                           ,  "to" : tpl[0]
-                           , "order" : int(tpl[1])})
+                           , "to" : tpl[0]
+                           , "order" : tpl[1]})
         self.graph = {"graph" : {"vertex" : self.g.vertex, "arc" : arc}}
 
 
@@ -120,6 +137,8 @@ class GraphCreation:
                           'у каждой из дуг.')
                     return
                 self.get_graph()
+                if self.g.vertex == [-1]:
+                    return
                 if self.write_to_file():
                     print(f"Граф был успешно записан в файл")
 
