@@ -33,7 +33,11 @@ class Graph:
             n = len(vs)
             tmp = [''] * n
             for el, k in vs:
-                tmp[(k - 1) % n] = el
+                t = (k - 1) % n
+                if tmp[t] == el:
+                    tmp[t + 1] = el
+                else:
+                    tmp[t] = el
             test = set()
             for el in tmp:
                 test.add(el)
