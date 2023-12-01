@@ -1,0 +1,1 @@
+{"graph": {"vertex": ["v1", "v2"], "arc": [{"from": "v1", "to": "v2", "order": 1}]}}
