@@ -1,12 +1,13 @@
 import autograd.numpy as np
 from autograd import grad
-import json
+import json, sys
 
 class BackPropagation:
 
-    def __init__(self, W1, W2) -> None:
-        self.W1 = W1
-        self.W2 = W2
+    def __init__(self, W1, W2, n) -> None:
+        self.W1 = np.array(W1)
+        self.W2 = np.array(W2)
+        self.n = n
         self.lmd = None
         self.messages = None
 
@@ -16,8 +17,8 @@ class BackPropagation:
     def d_sigmoid(self, y : float) -> float:
         return y * (1.0 - y)
 
-    def get_learning_rate(self, l : float) -> None:
-        self.lmd = l
+    def get_learning_rate_coeff(self, l : float) -> None:
+        self.lmd = float(l)
 
     def mse(self, y_pred, y_true):
         return (1.0 / 2.0) * np.square(y_true - y_pred)
@@ -29,37 +30,35 @@ class BackPropagation:
         y = self.sigmoid(sum)
         return (y, output)
 
-    def train(self, x_vec : list, y_true : list, n : int) -> None:
+    def train(self, x_vec : list, y_true : list) -> None:
         m = len(x_vec)
         self.messages = []
-        for i in range(1, n + 1):
+        for i in range(1, self.n + 1):
             errors = []
             for k in range(m):
                 y, out = self.go_forward(x_vec[k])
                 e = self.mse(y, y_true[k])
-                errors.append(e)
+                errors.append(list(e))
                 delta = e * self.d_sigmoid(y)
                 for t in range(len(self.W2)):
                     self.W2[t] = self.W2[t] - self.lmd * delta * out[t]
                 for t in range(len(self.W1)):    
                     delta2 = self.W2 * delta * self.d_sigmoid(out[t])
                     self.W1[t, :] = self.W1[t, :] - x_vec[k] * delta2[t] * self.lmd
-            self.messages.append(f"При i = {i} значения функции ошибок: {errors}")
+            self.messages.append(f"При i = {i} значения функции ошибок: {errors}\n")
 
-def read_json_file(self, name) -> dict:
+def read_json_file(name) -> dict:
     try:
         f = open(name)
         data = json.load(f)
         f.close()
     except:
-        print(f"Файла `{self._in}` не существует. "
+        print(f"Файла `{name}` не существует. "
               "Проверьте корректность имени файла.")
         exit(0)
     return data
 
-
 def args_parser(argv : list) -> None:
-    global graphs
     in1, in2, in3, out = None, None, None, None
     for el in argv:
         if "matrix=" in el:
@@ -76,35 +75,44 @@ def args_parser(argv : list) -> None:
               " добавить в качестве аргументов названия файлов"
               " формата JSON для следующих параметров:\n"
               "matrix= -- файл, где лежат матрицы весов\n"
-              "param= -- файл с параметром n -- количество итераций"
-              "train= -- файл с входными и выходными параметрами")
-        return False
-    return True
+              "param= -- файл с параметром n (количество итераций)\n"
+              "train= -- файл с входными и выходными параметрами\n")
+        exit(0)
+    return in1, in2, in3, out
 
+
+def write_inf(mes : list, filename):
+    mes = "".join(mes)
+    try:
+        f = open(filename, 'w')
+        f.write(mes)
+        f.close()
+    except:
+        print(f'Ошибка записи данных в файл {filename}')
+        exit(0)
+    
 def main():
-    pass
-
-
-def test():
-    w1 = [[0.1], [0.2], [0.3], [0.4], [0.5], [0.6], [0.7], [0.8], [0.9], [0.0]]
-    w2 = [[0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]]
-    w2 = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
-    x__ = [[0.1],[0.2],[0.3],[0.4],[0.5],[0.6],[0.7],[0.8],[0.9],[1.0]]
-    # x = [[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]]
-    y__ = [[0.9], [0.8], [0.7], [0.6], [0.5], [0.4], [0.3], [0.2], [0.1], [0.0]]
-    # x = [[0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
-    # x = np.array(x)
-    # w1 = np.array(w1)
-    # print(len(w1), len(w1[0]), len(x))
-    # print(np.dot(w1, x))
-
-    c = BackPropagation(np.array(w1),np.array(w2))
-    c.get_learning_rate(0.2)
-    y_, out = c.go_forward(np.array(x__[0]))
-    e = c.mse(y_, np.array(y__[0]))
-    print(e, y_, out)
-    c.train(np.array(x__), np.array(y__), 10)
-    # print(c.W1[0, :], c.W1[0])
-
+    # elements = []
+    mtrx, par, train, out = args_parser(sys.argv)
+    if out is None:
+        print("Отсутствует название файла для вывода.\n"
+              "Файл для вывода был выбран по умолчанию (output.txt)")
+        out = "output.txt"
+    mtrx = read_json_file(mtrx)
+    par = read_json_file(par)
+    train = read_json_file(train)
+    if len(mtrx) != 2 or len(par) != 1:
+        return
+    print(f"\nМатрица весов W1 (первый слой): {mtrx['W1']}")
+    print(f"\nМатрица весов W2 (второй слой): {mtrx['W2']}")
+    print(f"\nКоличество итераций : {par['n']}")
+    lmd = input("Введите значение коэффициента скорости обучения: ")
+    bp = BackPropagation(mtrx['W1'], mtrx['W2'], par['n'])
+    bp.get_learning_rate_coeff(lmd)
+    xs = np.array(train["in"])
+    ys = np.array(train["in"])
+    bp.train(xs, ys)
+    # elements.append((k, bp.messages))
+    write_inf(bp.messages, out)    
 if __name__ == '__main__':
     main()
