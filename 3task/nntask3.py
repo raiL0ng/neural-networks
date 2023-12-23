@@ -41,10 +41,6 @@ class Graph:
                     self.vertex = [-1]
                     print('В графе некорректно заданы номера!\nПроверьте уникальность номеров.')
                     return
-            # if len(test) != len(tmp):
-            #     self.vertex = [-1]
-            #     print('В данном случае от каждой вершины должна выходить одна дуга.')
-            #     return
             self.adjc[v] = tmp
         for v in unic_vs:
             if v not in self.adjc:
@@ -135,7 +131,7 @@ class FunctionCreation:
             self.oper = json.load(f)
             f.close()
         except:
-            print(f"Файла `{self._in}` не существует. "
+            print(f"Файла `{self._op}` не существует. "
                   "Проверьте корректность имени файла.")
             return False
         return True
