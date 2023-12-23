@@ -1,5 +1,4 @@
 import autograd.numpy as np
-from autograd import grad
 import json, sys
 
 class FeedForward:
@@ -15,12 +14,35 @@ class FeedForward:
 
 
     def go_forward(self, x : list) -> (list, list):
-        sum = np.dot(self.ws[0], x)
-        y = np.array([self.sigmoid(x) for x in sum])
-        for i in range(1, self.n):
-            sum = np.dot(self.ws[i], y)
+        try:
+            sum = np.dot(self.ws[0], x)
             y = np.array([self.sigmoid(x) for x in sum])
+        except ValueError as e:
+            print(f"{e}: проверьте размерность слоя #1 и вектора х!\n"
+                  f"Умножение выполнить не удалось из-за некорректно заданных размерностей"
+                  f" слоя #1 и вектора x.")
+            return [-1]
+        for i in range(1, self.n):
+            try:
+                sum = np.dot(self.ws[i], y)
+                y = np.array([self.sigmoid(x) for x in sum])
+            except ValueError as e:
+                print(f"{e}: проверьте размерность слоя #{i + 1} и вектора y!\n"
+                  f"Умножение выполнить не удалось из-за некорректно заданных размерностей"
+                  f" слоя #{i + 1} и вектора y.")
+                return [-1]
         return y
+
+
+    def get_result(self, xs : list):
+        ys = []
+        for x in xs:
+            new_val = list(self.go_forward(np.array(x)))
+            if new_val == [-1]:
+                ys.clear()
+                break
+            ys.append(new_val)
+        return ys
 
 
 def read_json_file(name) -> dict:
@@ -73,15 +95,21 @@ def main():
               "Файл для вывода был выбран по умолчанию (output.txt)")
         out = "output.txt"
     WS = read_json_file(mtrx)
-    xs = read_json_file(vec)
+    XS = read_json_file(vec)
     ws = []
+    if "W" not in WS.keys():
+        print('\nНекорректный ввод данных')
+        return
+    if "x" not in XS.keys():
+        print('\nНекорректный ввод данных')
+        return
     for w in WS['W']:
         ws.append(np.array(w))
-    ys = []
     c = FeedForward(ws)
-    for x in xs['x']:
-        ys.append(list(c.go_forward(np.array(x))))
-    write_to_file({'y' : ys}, out)
+    ys = c.get_result(XS['x'])
+    if ys != []:
+        write_to_file({'y' : ys}, out)
+
 
 if __name__ == '__main__':
     main()
