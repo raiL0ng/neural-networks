@@ -8,7 +8,7 @@ class BackPropagation:
         self.W1 = np.array(W1)
         self.W2 = np.array(W2)
         self.n = n
-        self.lmd = None
+        self.lrate = None
         self.messages = None
 
     def sigmoid(self, x : float) -> float:
@@ -18,7 +18,7 @@ class BackPropagation:
         return y * (1.0 - y)
 
     def get_learning_rate_coeff(self, l : float) -> None:
-        self.lmd = float(l)
+        self.lrate = float(l)
 
     def mse(self, y_pred, y_true):
         return (1.0 / 2.0) * np.square(y_true - y_pred)
@@ -41,10 +41,10 @@ class BackPropagation:
                 errors.append(list(e))
                 delta = e * self.d_sigmoid(y)
                 for t in range(len(self.W2)):
-                    self.W2[t] = self.W2[t] - self.lmd * delta * out[t]
+                    self.W2[t] = self.W2[t] - self.lrate * delta * out[t]
                 for t in range(len(self.W1)):    
                     delta2 = self.W2 * delta * self.d_sigmoid(out[t])
-                    self.W1[t, :] = self.W1[t, :] - x_vec[k] * delta2[t] * self.lmd
+                    self.W1[t, :] = self.W1[t, :] - x_vec[k] * delta2[t] * self.lrate
             self.messages.append(f"При i = {i} значения функции ошибок: {errors}\n")
 
 def read_json_file(name) -> dict:
@@ -103,12 +103,12 @@ def main():
     train = read_json_file(train)
     if len(mtrx) != 2 or len(par) != 1:
         return
+    print(len(mtrx["W1"]))
     print(f"\nМатрица весов W1 (первый слой): {mtrx['W1']}")
     print(f"\nМатрица весов W2 (второй слой): {mtrx['W2']}")
     print(f"\nКоличество итераций : {par['n']}")
-    lmd = input("Введите значение коэффициента скорости обучения: ")
     bp = BackPropagation(mtrx['W1'], mtrx['W2'], par['n'])
-    bp.get_learning_rate_coeff(lmd)
+    bp.get_learning_rate_coeff(par['lrate'])
     xs = np.array(train["in"])
     ys = np.array(train["in"])
     bp.train(xs, ys)
