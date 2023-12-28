@@ -4,11 +4,11 @@ import json, sys
 
 class BackPropagation:
 
-    def __init__(self, W1, W2, n) -> None:
-        self.W1 = np.array(W1)
-        self.W2 = np.array(W2)
+    def __init__(self, ws, n, lrate) -> None:
+        self.ws = ws
+        self.len_ws = len(ws)
         self.n = n
-        self.lrate = None
+        self.lrate = lrate
         self.messages = None
 
     def sigmoid(self, x : float) -> float:
@@ -17,35 +17,65 @@ class BackPropagation:
     def d_sigmoid(self, y : float) -> float:
         return y * (1.0 - y)
 
-    def get_learning_rate_coeff(self, l : float) -> None:
-        self.lrate = float(l)
+    # def get_learning_rate_coeff(self, l : float) -> None:
+    #     self.lrate = float(l)
 
     def mse(self, y_pred, y_true):
-        return (1.0 / 2.0) * np.square(y_true - y_pred)
+        return np.square(y_true - y_pred)
 
-    def go_forward(self, input : list) -> (list, list):
-        sum = np.dot(self.W1, input)
-        output = np.array([self.sigmoid(x) for x in sum])
-        sum = np.dot(self.W2, output)
-        y = self.sigmoid(sum)
-        return (y, output)
+    def go_forward(self, x : list) -> (list, list):
+        ys = []
+        try:
+            sum = np.dot(self.ws[0], x)
+            y = np.array([self.sigmoid(x) for x in sum])
+            ys.append(y)
+        except ValueError as e:
+            print(f"{e}: проверьте размерность слоя #1 и вектора х!\n"
+                  f"Умножение выполнить не удалось из-за некорректно заданных размерностей"
+                  f" слоя #1 и вектора x.")
+            exit(0)
+        for i in range(1, self.len_ws):
+            try:
+                # print(self.ws[i].shape, y.shape, y)
+                sum = np.dot(self.ws[i], y)
+                y = np.array([self.sigmoid(x) for x in sum])
+                ys.append(y)
+            except ValueError as e:
+                print(f"{e}: проверьте размерность слоя #{i + 1} и вектора y!\n"
+                  f"Умножение выполнить не удалось из-за некорректно заданных размерностей"
+                  f" слоя #{i + 1} и вектора y.")
+                exit(0)
+        return ys
 
     def train(self, x_vec : list, y_true : list) -> None:
         m = len(x_vec)
         self.messages = []
-        for i in range(1, self.n + 1):
+        for it in range(1, self.n + 1):
             errors = []
             for k in range(m):
-                y, out = self.go_forward(x_vec[k])
-                e = self.mse(y, y_true[k])
-                errors.append(list(e))
-                delta = e * self.d_sigmoid(y)
-                for t in range(len(self.W2)):
-                    self.W2[t] = self.W2[t] - self.lrate * delta * out[t]
-                for t in range(len(self.W1)):    
-                    delta2 = self.W2 * delta * self.d_sigmoid(out[t])
-                    self.W1[t, :] = self.W1[t, :] - x_vec[k] * delta2[t] * self.lrate
-            self.messages.append(f"При i = {i} значения функции ошибок: {errors}\n")
+                ys = self.go_forward(np.array(x_vec[k]))
+                ys = np.insert(ys, 0, np.array(x_vec[k]), axis=0)
+                j = len(ys) - 2
+                e = self.mse(ys[-1], y_true[k])
+                delta = e * self.d_sigmoid(ys[-1])  
+                self.ws[-1] = self.ws[-1] - self.lrate * ys[j] * delta
+                # print(f'Получил веса w2 {self.ws[-1].shape} = {self.ws[-1]}')
+                # print(f'{1}-я delta = {delta}')
+                # print(f'dims ws[{1}] = {self.ws[1].shape} delta = {delta.shape} d_sigm = {self.d_sigmoid(ys[1])}')
+                # delta = self.ws[1] * delta * self.d_sigmoid(ys[1])
+                # print(f'{2}-я delta = {delta}')
+                # print(f'dims ws[{0}] = {self.ws[0].shape} delta = {delta.shape} ys[0] = {ys[0]}')
+                # for t in range(len(self.ws[0])):
+                #     self.ws[0][t, :] = self.ws[0][t, :] - ys[0] * delta[:, t] * self.lrate
+                for i in range(self.len_ws - 2, -1, -1):
+                    j -= 1
+                    delta = self.ws[i + 1] * delta * self.d_sigmoid(ys[j + 1])
+                    for t in range(len(self.ws[i])):
+                        self.ws[i][t, :] = self.ws[i][t, :] - ys[j] * delta[:, t] * self.lrate
+                # print(f'Получил веса w1 {self.ws[0].shape} = {self.ws[0]}')
+                errors.append(e)
+            mu = sum(errors) / len(errors)
+            self.messages.append(f"При i = {it} значения функции ошибок: {mu}\n")
 
 def read_json_file(name) -> dict:
     try:
@@ -90,6 +120,8 @@ def write_inf(mes : list, filename):
     except:
         print(f'Ошибка записи данных в файл {filename}')
         exit(0)
+    else:
+        print(f'\nДанные успешно записаны в файл {filename}')
     
 def main():
     # elements = []
@@ -101,18 +133,29 @@ def main():
     mtrx = read_json_file(mtrx)
     par = read_json_file(par)
     train = read_json_file(train)
-    if len(mtrx) != 2 or len(par) != 1:
+    if "W" not in mtrx.keys():
+        print('\nНекорректный ввод данных!\n'
+              'Не удалось считать матрицы весов.')
         return
-    print(len(mtrx["W1"]))
-    print(f"\nМатрица весов W1 (первый слой): {mtrx['W1']}")
-    print(f"\nМатрица весов W2 (второй слой): {mtrx['W2']}")
-    print(f"\nКоличество итераций : {par['n']}")
-    bp = BackPropagation(mtrx['W1'], mtrx['W2'], par['n'])
-    bp.get_learning_rate_coeff(par['lrate'])
+    if "n" not in par.keys() or "lrate" not in par.keys():
+        print('\nНекорректный ввод данных!\n'
+              'Не удалось считать параметры')
+        return
+    if "in" not in train.keys() or "out" not in train.keys():
+        print('\nНекорректный ввод данных!\n'
+              'Не удалось считать входные/выходные значения')
+        return
+    ws = []
+    for w in mtrx['W']:
+        ws.append(np.array(w))
+    for i in range(len(ws)):
+        print(f"\nМатрица весов W{i + 1} ({i + 1}-й слой): {ws[i]}")
+    print(f"\nКоличество итераций: {par['n']}")
+    print(f"\nСкорость обучения: {par['lrate']}")
+    bp = BackPropagation(ws, par['n'], par['lrate'])
     xs = np.array(train["in"])
     ys = np.array(train["in"])
     bp.train(xs, ys)
-    # elements.append((k, bp.messages))
     write_inf(bp.messages, out)    
 if __name__ == '__main__':
     main()
