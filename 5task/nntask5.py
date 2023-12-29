@@ -1,5 +1,4 @@
 import autograd.numpy as np
-from autograd import grad
 import json, sys
 
 class BackPropagation:
@@ -54,13 +53,20 @@ class BackPropagation:
             errors = []
             for k in range(m):
                 ys = self.go_forward(np.array(x_vec[k]))
+                # print(f'for x = {x_vec[k]} ys = {ys}')
                 ys = np.insert(ys, 0, np.array(x_vec[k]), axis=0)
+                if len(ys[-1]) != len(y_true[k]):
+                    print(f'\nРазмерность выходного значения алгоритма\n'
+                          f'не совпадает с размерностью желаемого выходного состояния {y_true[k]}')
+                    exit(0)
                 j = len(ys) - 2
                 e = self.mse(ys[-1], y_true[k])
+                # print(f'ошибка №{k} = {e}' )
                 delta = e * self.d_sigmoid(ys[-1])  
+                # print(f'{1}-я delta = {delta}')
+                # print(f'dims ws[{1}] = {self.ws[-1].shape} delta = {delta.shape} ys[0] = {ys[j]}')
                 self.ws[-1] = self.ws[-1] - self.lrate * ys[j] * delta
                 # print(f'Получил веса w2 {self.ws[-1].shape} = {self.ws[-1]}')
-                # print(f'{1}-я delta = {delta}')
                 # print(f'dims ws[{1}] = {self.ws[1].shape} delta = {delta.shape} d_sigm = {self.d_sigmoid(ys[1])}')
                 # delta = self.ws[1] * delta * self.d_sigmoid(ys[1])
                 # print(f'{2}-я delta = {delta}')
@@ -70,12 +76,13 @@ class BackPropagation:
                 for i in range(self.len_ws - 2, -1, -1):
                     j -= 1
                     delta = self.ws[i + 1] * delta * self.d_sigmoid(ys[j + 1])
+                    # print(f'{2}-я delta = {delta}')
                     for t in range(len(self.ws[i])):
                         self.ws[i][t, :] = self.ws[i][t, :] - ys[j] * delta[:, t] * self.lrate
                 # print(f'Получил веса w1 {self.ws[0].shape} = {self.ws[0]}')
-                errors.append(e)
-            mu = sum(errors) / len(errors)
-            self.messages.append(f"При i = {it} значения функции ошибок: {mu}\n")
+                errors.append(sum(e) / len(e))
+            # mu = sum(errors) / len(errors)
+            self.messages.append(f"При i = {it} значения функции ошибок: {errors}\n")
 
 def read_json_file(name) -> dict:
     try:
