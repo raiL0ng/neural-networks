@@ -16,12 +16,6 @@ class BackPropagation:
     def d_sigmoid(self, y : float) -> float:
         return y * (1.0 - y)
 
-    # def get_learning_rate_coeff(self, l : float) -> None:
-    #     self.lrate = float(l)
-
-    def mse(self, y_pred, y_true):
-        return np.square(y_true - y_pred)
-
     def go_forward(self, x : list) -> (list, list):
         ys = []
         try:
@@ -35,7 +29,6 @@ class BackPropagation:
             exit(0)
         for i in range(1, self.len_ws):
             try:
-                # print(self.ws[i].shape, y.shape, y)
                 sum = np.dot(self.ws[i], y)
                 y = np.array([self.sigmoid(x) for x in sum])
                 ys.append(y)
@@ -53,36 +46,22 @@ class BackPropagation:
             errors = []
             for k in range(m):
                 ys = self.go_forward(np.array(x_vec[k]))
-                # print(f'for x = {x_vec[k]} ys = {ys}')
                 ys = np.insert(ys, 0, np.array(x_vec[k]), axis=0)
                 if len(ys[-1]) != len(y_true[k]):
                     print(f'\nРазмерность выходного значения алгоритма\n'
                           f'не совпадает с размерностью желаемого выходного состояния {y_true[k]}')
                     exit(0)
                 j = len(ys) - 2
-                e = self.mse(ys[-1], y_true[k])
-                # print(f'ошибка №{k} = {e}' )
-                delta = e * self.d_sigmoid(ys[-1])  
-                # print(f'{1}-я delta = {delta}')
-                # print(f'dims ws[{1}] = {self.ws[-1].shape} delta = {delta.shape} ys[0] = {ys[j]}')
-                self.ws[-1] = self.ws[-1] - self.lrate * ys[j] * delta
-                # print(f'Получил веса w2 {self.ws[-1].shape} = {self.ws[-1]}')
-                # print(f'dims ws[{1}] = {self.ws[1].shape} delta = {delta.shape} d_sigm = {self.d_sigmoid(ys[1])}')
-                # delta = self.ws[1] * delta * self.d_sigmoid(ys[1])
-                # print(f'{2}-я delta = {delta}')
-                # print(f'dims ws[{0}] = {self.ws[0].shape} delta = {delta.shape} ys[0] = {ys[0]}')
-                # for t in range(len(self.ws[0])):
-                #     self.ws[0][t, :] = self.ws[0][t, :] - ys[0] * delta[:, t] * self.lrate
+                e = ys[-1] - y_true[k]
+                grad = e * self.d_sigmoid(ys[-1])  
+                self.ws[-1] = self.ws[-1] - self.lrate * ys[j] * grad
                 for i in range(self.len_ws - 2, -1, -1):
                     j -= 1
-                    delta = self.ws[i + 1] * delta * self.d_sigmoid(ys[j + 1])
-                    # print(f'{2}-я delta = {delta}')
+                    grad = self.ws[i + 1] * grad * self.d_sigmoid(ys[j + 1])
                     for t in range(len(self.ws[i])):
-                        self.ws[i][t, :] = self.ws[i][t, :] - ys[j] * delta[:, t] * self.lrate
-                # print(f'Получил веса w1 {self.ws[0].shape} = {self.ws[0]}')
+                        self.ws[i][t, :] = self.ws[i][t, :] - ys[j] * grad[:, t] * self.lrate
                 errors.append(sum(e) / len(e))
-            # mu = sum(errors) / len(errors)
-            self.messages.append(f"При i = {it} значения функции ошибок: {errors}\n")
+            self.messages.append(f"При i = {it} значения функции ошибок: {sum(errors) / len(errors)}\n")
 
 def read_json_file(name) -> dict:
     try:
@@ -161,7 +140,7 @@ def main():
     print(f"\nСкорость обучения: {par['lrate']}")
     bp = BackPropagation(ws, par['n'], par['lrate'])
     xs = np.array(train["in"])
-    ys = np.array(train["in"])
+    ys = np.array(train["out"])
     bp.train(xs, ys)
     write_inf(bp.messages, out)    
 if __name__ == '__main__':
