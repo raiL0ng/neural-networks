@@ -1,0 +1,12 @@
+\babel@toc {russian}{}\relax 
+\contentsline {section}{\cyrillictext \CYRV \CYRV \CYRE \CYRD \CYRE \CYRN \CYRI \CYRE }{3}{section*.1}%
+\contentsline {section}{\numberline {1}Искусственные иммунные системы}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Связь биологической иммунной системы с искусственными иммунными системами}{4}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Описание принципов функционирования ИИС}{5}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Роль ИИС в обнаружении и борьбе с угрозами}{6}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Нейронные иммунные сети}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Внедрение }{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Перспективы нейронных иммунных сетей}{6}{subsection.2.3}%
+\contentsline {section}{\cyrillictext \CYRS \CYRP \CYRI \CYRS \CYRO \CYRK \ \CYRI \CYRS \CYRP \CYRO \CYRL \CYRSFTSN \CYRZ \CYRO \CYRV \CYRA \CYRN \CYRN \CYRERY \CYRH \ \CYRI \CYRS \CYRT \CYRO \CYRCH \CYRN \CYRI \CYRK \CYRO \CYRV }{6}{section*.3}%
+\contentsfinish 
