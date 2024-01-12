@@ -1,2 +1,10 @@
 *task/*.json
 *task/*.txt
+*.aux
+*_minted-*
+*.fls
+*.fdb_latexmk
+*.out
+*.synctex.gz
+*.log
+*.toc
